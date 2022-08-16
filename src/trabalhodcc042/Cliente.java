@@ -12,6 +12,7 @@ import javax.swing.JOptionPane;
 import java.net.InetAddress;
 import java.util.Formatter;
 import java.util.Random;
+import java.util.Scanner;
 
 /**
  * @author Débora izabel Rocha Duarte - 201776029
@@ -22,16 +23,26 @@ public class Cliente {
     static File fSaida;
     static Formatter resultado;
     static String localResultado = "resultado.txt";
+    static boolean comPerdas;
+    static Scanner teclado = new Scanner(System.in);
+    static int descartes = 0; 
     
     public static void main(String[] args) {
         System.out.println("Pronto para receber!");
         int porta = 1025; //porta 
         String localArquivo = "arquivoSaida.txt"; // Arquivo de saída
+        System.out.println("Incluir perdas?\n[1]Com perdas   [2]Sem perdas");
+        int valor = teclado.nextInt();
+        if (valor ==1) comPerdas = true;
+        if (valor ==2) comPerdas = false;
+        
         criaArquivo(porta, localArquivo); // Cria o arquivo
     }
      
     public static void criaArquivo (int porta, String localArquivo){
         try{
+            long tempo;
+            long inicio = System.currentTimeMillis();
             resultado = new Formatter(localResultado);
             DatagramSocket socket = new DatagramSocket(porta);
             byte[] entradaNome = new byte[1024]; // Guarda dados do Datagram com o nome do arquivo
@@ -46,6 +57,12 @@ public class Cliente {
             FileOutputStream arqSaida = new FileOutputStream(f); //escreve no arquivo
             
             recebeArquivo(arqSaida, socket); // Receiving the file
+            
+            long fim  = System.currentTimeMillis();
+            tempo = fim - inicio;
+            resultado.format("\nTempo de execução: " + tempo/1000);
+            resultado.format("\nTotal de descartes: " + descartes);
+            resultado.close();
                         
         }catch(Exception ex){
             ex.printStackTrace();
@@ -77,8 +94,12 @@ public class Cliente {
             // vefirifica se chegou ao final do arquivo
             flag = (mensagem[2] & 0xff) == 1;
             
+            int controle = 2;
+            
+            if (comPerdas == true){            
             Random rand = new Random();
-            int controle = rand.nextInt();
+            controle = rand.nextInt();
+            } 
             
             // Se numero de sequencia é igual o  último + 1 está correto
             // pega os dados da mensagem e escreve o ack informando que chegou corretamente
@@ -93,20 +114,20 @@ public class Cliente {
                 //Escreve os dados no arquivo e imprime o numero de sequencia
                 arqSaida.write(paraEscrita);
                 System.out.println("Recebido. Numero de Sequencia: " + fimSequencia);
-                resultado.format("Recebido. Numero de Sequencia: " + fimSequencia);
+                resultado.format("\nRecebido. Numero de Sequencia: " + fimSequencia);
 
                 //Envis o ACK
                 enviaAck(fimSequencia, socket, address, port);
             } else {
+                descartes++;
                 System.out.println("Número de sequência esperado: " + (fimSequencia + 1) + ". Número recebido: " + numSequencia + ". Descartando");
-                resultado.format("Número de sequência esperado: " + (fimSequencia + 1) + ". Número recebido: " + numSequencia + ". Descartando");
+                resultado.format("\nNúmero de sequência esperado: " + (fimSequencia + 1) + ". Número recebido: " + numSequencia + ". Descartando");
                 // Reevia o ACK
                 enviaAck(fimSequencia, socket, address, port);
             }
             // Verifica se é o ultimo datagrama
             if (flag) {
                 arqSaida.close();
-                resultado.close();
                 break;
             }
         }
@@ -121,7 +142,7 @@ public class Cliente {
         DatagramPacket acknowledgement = new DatagramPacket(ackPacket, ackPacket.length, address, port);
         socket.send(acknowledgement);
         System.out.println("ACK enviado: Número de Sequencia = " + fimSequencia);
-        resultado.format("ACK enviado: Número de Sequencia = " + fimSequencia);
+        resultado.format("\nACK enviado: Número de Sequencia = " + fimSequencia);
     }
     
 }
