@@ -1,7 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Trabalho da disciplina DCC042 - Redes de Computadores 2022-1
  */
 package trabalhodcc042;
 
@@ -12,14 +10,20 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import javax.swing.JOptionPane;
 import java.net.InetAddress;
+import java.util.Formatter;
+import java.util.Random;
 
 /**
- *
- * @author izabe
+ * @author Débora izabel Rocha Duarte - 201776029
+ * @author Laís Figueiredo Linhares - 201735030
  */
 public class Cliente {
     
-     public static void main(String[] args) {
+    static File fSaida;
+    static Formatter resultado;
+    static String localResultado = "resultado.txt";
+    
+    public static void main(String[] args) {
         System.out.println("Pronto para receber!");
         int porta = 1025; //porta 
         String localArquivo = "arquivoSaida.txt"; // Arquivo de saída
@@ -28,6 +32,7 @@ public class Cliente {
      
     public static void criaArquivo (int porta, String localArquivo){
         try{
+            resultado = new Formatter(localResultado);
             DatagramSocket socket = new DatagramSocket(porta);
             byte[] entradaNome = new byte[1024]; // Guarda dados do Datagram com o nome do arquivo
             DatagramPacket entradaNomePacket = new DatagramPacket(entradaNome, entradaNome.length);
@@ -41,6 +46,7 @@ public class Cliente {
             FileOutputStream arqSaida = new FileOutputStream(f); //escreve no arquivo
             
             recebeArquivo(arqSaida, socket); // Receiving the file
+                        
         }catch(Exception ex){
             ex.printStackTrace();
             System.exit(1);
@@ -51,7 +57,7 @@ public class Cliente {
         System.out.println("Recebendo arquivo");
         boolean flag; // Chegou ao final do arquivo
         int numSequencia = 0; 
-        int fimSequencia = 0;  
+        int fimSequencia = 0; 
         
         while (true) {
             byte[] mensagem = new byte[1024]; // Armazena os dados recebidos
@@ -71,9 +77,12 @@ public class Cliente {
             // vefirifica se chegou ao final do arquivo
             flag = (mensagem[2] & 0xff) == 1;
             
-            // Se numero de sequencia é igual p  último + 1 está correto
-            // pega os dados da mensagem e escrev o ack informando que chegou corretamente
-            if (numSequencia == (fimSequencia + 1)) {
+            Random rand = new Random();
+            int controle = rand.nextInt();
+            
+            // Se numero de sequencia é igual o  último + 1 está correto
+            // pega os dados da mensagem e escreve o ack informando que chegou corretamente
+            if (numSequencia == (fimSequencia + 1) && controle%2 != 0) { //controle serve para gerar alguns descartes
 
                 // coloca o ultimo numero de sequencia como fim da sequencia
                 fimSequencia = numSequencia;
@@ -83,18 +92,21 @@ public class Cliente {
 
                 //Escreve os dados no arquivo e imprime o numero de sequencia
                 arqSaida.write(paraEscrita);
-                System.out.println("Received: Sequence number:" + fimSequencia);
+                System.out.println("Recebido. Numero de Sequencia: " + fimSequencia);
+                resultado.format("Recebido. Numero de Sequencia: " + fimSequencia);
 
                 //Envis o ACK
                 enviaAck(fimSequencia, socket, address, port);
             } else {
                 System.out.println("Número de sequência esperado: " + (fimSequencia + 1) + ". Número recebido: " + numSequencia + ". Descartando");
+                resultado.format("Número de sequência esperado: " + (fimSequencia + 1) + ". Número recebido: " + numSequencia + ". Descartando");
                 // Reevia o ACK
                 enviaAck(fimSequencia, socket, address, port);
             }
             // Verifica se é o ultimo datagrama
             if (flag) {
                 arqSaida.close();
+                resultado.close();
                 break;
             }
         }
@@ -109,6 +121,7 @@ public class Cliente {
         DatagramPacket acknowledgement = new DatagramPacket(ackPacket, ackPacket.length, address, port);
         socket.send(acknowledgement);
         System.out.println("ACK enviado: Número de Sequencia = " + fimSequencia);
+        resultado.format("ACK enviado: Número de Sequencia = " + fimSequencia);
     }
     
 }

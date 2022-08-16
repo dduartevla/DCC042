@@ -1,7 +1,5 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Trabalho da disciplina DCC042 - Redes de Computadores 2022-1
  */
 package trabalhodcc042;
 
@@ -16,12 +14,12 @@ import javax.swing.JFileChooser;
 
 
 /**
- *
- * @author izabe
+ * @author Débora izabel Rocha Duarte - 201776029
+ * @author Laís Figueiredo Linhares - 201735030
  */
 public class Servidor {
     
-     private void isPronto(int porta, String host) {
+    private void isPronto(int porta, String host) {
 
         System.out.println("Escolhendo arquivo para enviar");
         try {
@@ -53,7 +51,7 @@ public class Servidor {
         }
     }
      
-      private void enviaArquivo(DatagramSocket socket, byte[] fileByteArray, InetAddress address, int porta) throws IOException {
+    private void enviaArquivo(DatagramSocket socket, byte[] fileByteArray, InetAddress address, int porta) throws IOException {
         System.out.println("Enviando arquivo...");
         int numSequencia = 0;
         boolean flag; // Fim do arquivo?
@@ -83,7 +81,7 @@ public class Servidor {
 
             DatagramPacket sendPacket = new DatagramPacket(mensagem, mensagem.length, address, porta); // The data to be sent
             socket.send(sendPacket); // Sending the data
-            System.out.println("Número de sequencia eviado: " + numSequencia);
+            System.out.println("Número de sequencia enviado: " + numSequencia);
 
             boolean ackRec; // Datagrama chegou?
 
