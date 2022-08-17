@@ -94,7 +94,7 @@ public class Cliente {
             // vefirifica se chegou ao final do arquivo
             flag = (mensagem[2] & 0xff) == 1;
             
-            int controle = 2;
+            int controle = 1;
             
             if (comPerdas == true){            
             Random rand = new Random();
